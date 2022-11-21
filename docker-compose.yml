@@ -1,0 +1,44 @@
+version: '3'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: ./Docker/api/Dockerfile
+    env_file:
+      - db_creds.env
+    command: bash -c "python app/main.py"
+    volumes:
+      - .:/app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mongodb
+    links:
+      - mongodb
+
+  mongodb:
+    image: mongo:latest
+    env_file:
+      - db_creds.env
+    ports:
+      - "27017:27017"
+    expose:
+      - 27017
+    command:
+      mongod --quiet --logpath /dev/null
+    
+    
+  scraper:
+    build:
+      context: .
+      dockerfile: ./Docker/scraper/Dockerfile
+    env_file:
+      - db_creds.env
+    command: bash -c "python scraper/main.py"
+    volumes:
+      - .:/scraper
+    depends_on:
+      - mongodb
+    links:
+      - mongodb
